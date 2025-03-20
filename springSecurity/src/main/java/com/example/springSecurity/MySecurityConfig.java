@@ -1,6 +1,7 @@
 package com.example.springSecurity;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -14,6 +15,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class MySecurityConfig {
 
         @Bean
@@ -35,7 +37,7 @@ public class MySecurityConfig {
 
             UserDetails admin=  User.withUsername("admin")
                     .password("{noop}adminPassword1") //noop tells password should be saved as plain text to the spring boot
-                    .roles("USER")
+                    .roles("ADMIN")
                     .build();
             return new InMemoryUserDetailsManager(user1,admin);
         }
