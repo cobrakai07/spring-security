@@ -1,7 +1,8 @@
-package com.example.springSecurity;
+package com.example.springSecurity.controller;
 
 import com.example.springSecurity.dto.LoginRequest;
 import com.example.springSecurity.dto.LoginResponse;
+import com.example.springSecurity.dto.RegistrationRequest;
 import com.example.springSecurity.jwt.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,9 +13,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.web.bind.annotation.*;
 
+import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +33,10 @@ public class MyTestController {
     private JwtUtils utils;
     @Autowired
     private AuthenticationManager authenticationManager;
+    @Autowired
+    private DataSource dataSource;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping("/test")
     public String fun(){
@@ -70,6 +79,21 @@ public class MyTestController {
 
         LoginResponse response = new LoginResponse(userDetails.getUsername(),roles, jwtToken);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/create-user")
+    public ResponseEntity<?> createUser(@RequestBody RegistrationRequest user) {
+        JdbcUserDetailsManager userDetailsManager=
+                new JdbcUserDetailsManager(dataSource);
+        if(userDetailsManager.userExists(user.getUsername())){
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("User already exists!");
+        }
+        UserDetails newUser = User.withUsername(user.getUsername())
+                .password(passwordEncoder.encode(user.getPassword()))
+                .roles(user.getRole())
+                .build();
+        userDetailsManager.createUser(newUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body("User created successfully!");
     }
 
 }
